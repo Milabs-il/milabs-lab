@@ -1,0 +1,58 @@
+<!-- RTL blog fix for hosted site builders. Paste into the site's footer / custom code area.
+     1. An emoji that the editor saved as "?" at the start of a line becomes a check mark
+        (in headings it is removed).
+     2. Every block is shown right-to-left, so leading symbols stay on the right.
+     Runs only on blog pages (BLOG_PATH) and also fixes content that loads later. -->
+<script>
+(function run() {
+  if (!document.body) { document.addEventListener('DOMContentLoaded', run); return; }
+  // ---- settings ----
+  var BLOG_PATH = /^\/blogs?(\/|$)/;              // which pages are the blog
+  var REPLACEMENT = '✔️ ';           // what a lost emoji becomes ("✔️ ")
+  var SKIP = 'header, nav, pre, code, script, style, textarea'; // never touch these
+  // -------------------
+  if (!BLOG_PATH.test(location.pathname)) return; // blog pages only
+
+  var SEL = 'p, li, h1, h2, h3, h4, h5, h6, blockquote, td, th, figcaption, div, a';
+  var LOST = /^(\s*)\?️?(?:\s+|$)/; // "?" left where an emoji was, at the start of a line
+  var HEAD = /^H[1-6]$/;
+
+  function firstText(el) {
+    var w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    var n;
+    while ((n = w.nextNode())) { if (n.nodeValue.trim()) return n; }
+    return null;
+  }
+  function fixNode(t, inHeading) {
+    if (!t || !LOST.test(t.nodeValue)) return;
+    t.nodeValue = t.nodeValue.replace(LOST, inHeading ? '$1' : '$1' + REPLACEMENT);
+  }
+  function ownText(el) {
+    for (var n = el.firstChild; n; n = n.nextSibling) if (n.nodeType === 3 && n.nodeValue.trim()) return true;
+    return false;
+  }
+  function fix(root) {
+    if (root.nodeType !== 1) return;
+    var list = [root].concat(Array.prototype.slice.call(root.querySelectorAll(SEL)));
+    list.forEach(function (el) {
+      if (!el.matches || !el.matches(SEL) || el.closest(SKIP)) return;
+      if (el.tagName === 'DIV' && !ownText(el)) return;
+      var heading = HEAD.test(el.tagName) || !!el.closest('h1,h2,h3,h4,h5,h6');
+      fixNode(firstText(el), heading);
+      // Several lines inside one block, separated by <br>.
+      el.querySelectorAll('br').forEach(function (br) {
+        var n = br.nextSibling;
+        while (n && n.nodeType === 3 && !n.nodeValue.trim()) n = n.nextSibling;
+        if (n && n.nodeType === 3) fixNode(n, heading);
+        else if (n && n.nodeType === 1) fixNode(firstText(n), heading);
+      });
+      if (el.tagName !== 'A' && el.getAttribute('dir') !== 'rtl') el.setAttribute('dir', 'rtl');
+    });
+  }
+  fix(document.body);
+  // Blog lists and posts may load more content after the page opens.
+  new MutationObserver(function (muts) {
+    muts.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType === 1 && !n.closest(SKIP)) fix(n); }); });
+  }).observe(document.body, { childList: true, subtree: true });
+})();
+</script>

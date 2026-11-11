@@ -1,0 +1,125 @@
+<!-- RTL site header for hosted site builders: logo row, menu with a dropdown, mobile burger, current page highlight.
+     Paste into the site's footer / custom code area. Turn off the theme's own header.
+     Edit only the CONFIG block below. -->
+<style>
+  .rhm{--ink:#0a2a33;--accent:#156a78;--cta:#f4c542;--line:#d9e4e7;--soft:#f3f7f8;
+       background:#fff;border-bottom:1px solid var(--line);font-family:system-ui,-apple-system,'Segoe UI',Arial,sans-serif;position:sticky;top:0;z-index:50}
+  .rhm .in{max-width:1280px;margin:0 auto;padding:10px 20px 6px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+  .rhm .brand{font-size:22px;font-weight:800;color:var(--ink);text-decoration:none}
+  .rhm .brand img{display:block;height:36px;width:auto}
+  .rhm nav{width:100%;border-top:1px solid #eef3f4;padding-top:6px}
+  .rhm ul{list-style:none;margin:0;padding:0;display:flex;align-items:center;gap:2px}
+  .rhm a,.rhm .ddb{display:flex;align-items:center;gap:6px;padding:8px 9px;border:0;border-radius:8px;background:none;color:var(--ink);
+       text-decoration:none;font:inherit;font-size:14.5px;font-weight:600;white-space:nowrap;cursor:pointer}
+  .rhm a:hover,.rhm .ddb:hover,.rhm li.dd.open .ddb{background:var(--soft)}
+  .rhm a[aria-current],.rhm .ddb.cur{background:var(--ink);color:#fff}
+  .rhm li.cta{margin-inline-start:8px}
+  .rhm li.cta a{background:var(--cta);color:var(--ink);font-weight:800;padding:10px 14px;border-radius:10px}
+  .rhm .car{font-size:12px;transition:transform .15s}.rhm li.dd.open .car{transform:rotate(180deg)}
+  .rhm li.dd{position:relative}
+  .rhm ul.sub{display:none;position:absolute;top:100%;right:0;min-width:220px;flex-direction:column;align-items:stretch;padding:8px;
+       background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(10,42,51,.12);z-index:60}
+  .rhm li.dd.open ul.sub{display:flex}
+  .rhm .tog,.rhm .burger{display:none}
+  @media (hover:hover) and (min-width:768px){.rhm li.dd:hover ul.sub,.rhm li.dd:focus-within ul.sub{display:flex}}
+  @media (max-width:767px){
+    .rhm .burger{display:flex;margin-inline-start:auto;width:42px;height:42px;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:22px}
+    .rhm nav{display:none;border-top:0;padding-top:0}
+    .rhm .tog:checked ~ nav{display:block}
+    .rhm ul{flex-direction:column;align-items:stretch;padding:6px 0 10px}
+    .rhm a,.rhm .ddb{font-size:16px;padding:11px 10px;width:100%}
+    .rhm ul.sub{position:static;min-width:0;box-shadow:none;border:0;border-inline-start:3px solid var(--cta);border-radius:0;padding:0;margin:0 12px 0 0}
+    .rhm li.cta{margin:6px 0 0}.rhm li.cta a{justify-content:center}
+  }
+</style>
+<script>
+(function run() {
+  if (!document.body) { document.addEventListener('DOMContentLoaded', run); return; }
+  if (document.querySelector('header.rhm')) return;
+
+  // ================= CONFIG =================
+  var CONFIG = {
+    brand: { text: 'My Company', logo: '', href: '/' },   // logo: image URL, or '' for text
+    menu: [
+      { label: 'דף ראשי', href: '/' },
+      { label: 'השרותים שלנו', items: [
+        { label: 'שרות ראשון', href: '/service-1' },
+        { label: 'שרות שני',   href: '/service-2' }
+      ]},
+      { label: 'בלוג', href: '/blogs' }
+    ],
+    cta: { label: 'צור קשר', href: '/contact', newTab: false }  // or null for no button
+  };
+  // ==========================================
+
+  function el(tag, attrs, text) {
+    var e = document.createElement(tag);
+    for (var k in attrs || {}) e.setAttribute(k, attrs[k]);
+    if (text) e.textContent = text;
+    return e;
+  }
+  function link(item) { return el('a', { href: item.href }, item.label); }
+
+  var hdr = el('header', { class: 'rhm', dir: 'rtl' });
+  var inner = el('div', { class: 'in' });
+  var brand = el('a', { class: 'brand', href: CONFIG.brand.href, 'aria-label': CONFIG.brand.text });
+  if (CONFIG.brand.logo) brand.appendChild(el('img', { src: CONFIG.brand.logo, alt: CONFIG.brand.text }));
+  else brand.textContent = CONFIG.brand.text;
+  var tog = el('input', { type: 'checkbox', id: 'rhm-t', class: 'tog' });
+  var burger = el('label', { for: 'rhm-t', class: 'burger', 'aria-label': 'תפריט' }, '☰');
+  var nav = el('nav', { 'aria-label': 'תפריט ראשי' });
+  var ul = el('ul');
+
+  var dropdowns = [];
+  CONFIG.menu.forEach(function (item) {
+    var li = el('li');
+    if (item.items) {
+      li.className = 'dd';
+      var b = el('button', { type: 'button', class: 'ddb', 'aria-expanded': 'false', 'aria-haspopup': 'true' }, item.label + ' ');
+      b.appendChild(el('span', { class: 'car', 'aria-hidden': 'true' }, '▾'));
+      var sub = el('ul', { class: 'sub' });
+      item.items.forEach(function (s) { var sli = el('li'); sli.appendChild(link(s)); sub.appendChild(sli); });
+      li.appendChild(b); li.appendChild(sub);
+      dropdowns.push(li);
+    } else {
+      li.appendChild(link(item));
+    }
+    ul.appendChild(li);
+  });
+  if (CONFIG.cta) {
+    var cli = el('li', { class: 'cta' });
+    var ca = link(CONFIG.cta);
+    if (CONFIG.cta.newTab) { ca.target = '_blank'; ca.rel = 'noopener'; }
+    cli.appendChild(ca); ul.appendChild(cli);
+  }
+  nav.appendChild(ul);
+  inner.appendChild(brand); inner.appendChild(tog); inner.appendChild(burger); inner.appendChild(nav);
+  hdr.appendChild(inner);
+
+  // Mark the current page (and its dropdown).
+  var path = location.pathname.replace(/\/+$/, '') || '/';
+  hdr.querySelectorAll('nav a[href^="/"]').forEach(function (a) {
+    var h = a.getAttribute('href').replace(/\/+$/, '') || '/';
+    if (h === '/' ? path === '/' : (path === h || path.indexOf(h + '/') === 0)) {
+      a.setAttribute('aria-current', 'page');
+      var dd = a.closest('li.dd');
+      if (dd) dd.querySelector('.ddb').classList.add('cur');
+    }
+  });
+
+  // Dropdowns: click to open/close (touch and keyboard); click outside or Escape closes.
+  function setOpen(dd, v) { dd.classList.toggle('open', v); dd.querySelector('.ddb').setAttribute('aria-expanded', v ? 'true' : 'false'); }
+  dropdowns.forEach(function (dd) {
+    dd.querySelector('.ddb').addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = !dd.classList.contains('open');
+      dropdowns.forEach(function (o) { setOpen(o, false); });
+      setOpen(dd, open);
+    });
+  });
+  document.addEventListener('click', function (e) { dropdowns.forEach(function (dd) { if (!dd.contains(e.target)) setOpen(dd, false); }); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') dropdowns.forEach(function (dd) { setOpen(dd, false); }); });
+
+  document.body.insertBefore(hdr, document.body.firstChild);
+})();
+</script>
